@@ -1,23 +1,11 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Http\Controllers;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Request;
 
-class EbayUpdateListing implements ShouldQueue
+class TestController extends Controller
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-
     protected $ebay_host;
     protected $site_id;
     protected $app_id;
@@ -36,11 +24,12 @@ class EbayUpdateListing implements ShouldQueue
      *
      * @return void
      */
-    public function handle()
+    public function index()
     {
         $callName = 'ReviseFixedPriceItem';
         $version = '845';
         $url = $this->ebay_host . "wsapi?callname=${callName}&siteid=" . $this->site_id . "&appid=" . $this->app_id . "&version=${version}&routing=default";
+
         $pathPublic = public_path().'/files/products.csv';
 
         if(\File::exists($pathPublic)){
@@ -48,16 +37,28 @@ class EbayUpdateListing implements ShouldQueue
         }else{
             $csv =[];
         }
+
         foreach ($csv as $k_csv => $v_csv) {
             $item = $this->getItem($v_csv);
-
+            // dd($item['price']);
             //-------------
+            $titleNode = '';
+	        $categoryNode = '';
+	        $priceNode = '';
+	        $pictureNode = '';
+	        $compatNode = '';
+	        $surfaceFinishNode = '';
+	        $partNumbers = [];
             $title=$v_csv['title'];
+            // $description=$v_csv['description'];
+            $description=$item['description'];
             $brand = $item['brand'];
-
             $condition = $item['condition'];
+            $ranges ='ranges';
+            $itemId = $v_csv['itemId'];
+            $ipnNode='';
 
-            $ranges = 'ranges';
+
             //-------------
             $titleNode = '<Title><![CDATA[' . trim($title) . ']]></Title>';
             if (!empty($item['mpn'])) {
@@ -65,39 +66,63 @@ class EbayUpdateListing implements ShouldQueue
                 $pns = explode('/', $item['mpn']);
                 foreach ($pns as $pn) $partNumbers[] = trim($pn);
             }
+            if (!empty($item['ipn'])) {
+	            $ipnNode = '<NameValueList><Name>Interchange Part Number</Name><Value><![CDATA[' . trim($item['ipn']) . ']]></Value></NameValueList>';
+	            $pns = explode('/', $ipn);
+	            foreach ($pns as $pn) $partNumbers[] = trim($pn);
+	        }
+	        if (!empty($item['opn'])) {
+	            $opnNode = '<NameValueList><Name>Other Part Number</Name><Value><![CDATA[' . trim($item['opn']) . ']]></Value></NameValueList>';
+	            $pns = explode('/', $opn);
+	            foreach ($pns as $pn) $partNumbers[] = trim($pn);
+	        }
             if (!empty($item['brand']))
                 $brandNode = '<NameValueList><Name>Brand</Name><Value><![CDATA[' . trim($item['brand']) . ']]></Value></NameValueList>';
+            if (!empty($item['category']))
+            $categoryNode = '<PrimaryCategory><CategoryID><![CDATA[' . trim($item['category']) . ']]></CategoryID></PrimaryCategory>';
+        	if (!empty($item['price']))
+            $priceNode = '<StartPrice>' . trim($item['price']) . '</StartPrice>';
+        	//-----------
+        	if (!empty($item['brand']))
+	            $partBrandNode = '<NameValueList><Name>Part Brand</Name><Value><![CDATA[' . trim($item['brand']) . ']]></Value></NameValueList>';
+
+	        $warrantyNode = '<NameValueList><Name>Warranty</Name><Value><![CDATA[1 year]]></Value></NameValueList>';
+
+	        $placementNode = '<NameValueList><Name>Placement on Vehicle</Name>';
 
             $ebayToken = $this->token;
-            $itemId = $v_csv['itemId'];
+            
 
             $oldDescHtml = str_replace(' class="bold"', '', $item['description']);
-            $oldDescHtml = str_replace(' center vcenter', '', $oldDescHtml);
+	        $oldDescHtml = str_replace(' center vcenter', '', $oldDescHtml);
 
-            preg_match("/label\">Description<\\/td>\\s*<td colspan=\"3\">(?<val>.+?)<\\/td/is", $oldDescHtml, $matches);
+	        preg_match("/label\">Description<\\/td>\\s*<td colspan=\"3\">(?<val>.+?)<\\/td/is", $oldDescHtml, $matches);
 
-            $oldDescription = str_replace('<br>', "\n", $matches['val']);
+	        $oldDescription = str_replace('<br>', "\n", $matches['val']);
 
-            preg_match("/label\">Notes<\\/td>\\s*<td colspan=\"3\">(?<val>.+?)<\\/td/is", $oldDescHtml, $matches);
-            $oldNotes = str_replace('<br>', "\n", $matches['val']);
+	        preg_match("/label\">Notes<\\/td>\\s*<td colspan=\"3\">(?<val>.+?)<\\/td/is", $oldDescHtml, $matches);
+	        $oldNotes = str_replace('<br>', "\n", $matches['val']);
 
-            //get description
 
-            $ch = curl_init('http://integra2.eocenterprise.com/api/ebay/raw_preview_v2');
-            curl_setopt($ch, CURLOPT_POSTFIELDS, [
-                'title' => $title, //done
-                'desc' => $oldDescription, //done
-                'brand' => trim($brand), //done
-                'condition' => $condition, //done
-                'partNumbers' => implode("\n", $partNumbers), //done
-                'notes' => $oldNotes,//done
-                'ranges' => $ranges
-            ]);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $descNode = curl_exec($ch);
-            curl_close($ch);
+            //---- get description----
 
-            //end
+         //    $ch = curl_init('http://integra2.eocenterprise.com/api/ebay/raw_preview_v2');
+	        // curl_setopt($ch, CURLOPT_POSTFIELDS, [
+	        //     'title' => $title, //done
+	        //     'desc' => $oldDescription, //done
+	        //     'brand' => trim($brand), //done
+	        //     'condition' => $condition, //done
+	        //     'partNumbers' => implode("\n", $partNumbers), //done
+	        //     'notes' => $oldNotes,//done
+	        //     'ranges' => $ranges
+	        // ]);
+	        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	        // $descNode = curl_exec($ch);
+	        // curl_close($ch);
+	        // <Description><![CDATA[${descNode}]]></Description>
+	        // <ItemSpecifics>${mpnNode}${ipnNode}${brandNode}${partBrandNode}</ItemSpecifics>
+// 
+            //---- end ---------------
                             $data = <<< EOD
 <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
     <s:Header>
@@ -110,7 +135,6 @@ class EbayUpdateListing implements ShouldQueue
         <Item>
             <ItemID>${itemId}</ItemID>
              ${titleNode}
-             <Description><![CDATA[${descNode}]]></Description>
             <ProductListingDetails>
                 <UPC><![CDATA[N/A]]></UPC>
             </ProductListingDetails>
@@ -124,6 +148,7 @@ EOD;
                 'Content-Type: text/xml',
                 'SOAPAction: ""'
             );
+            // dd($data);
             dispatch(new \App\Jobs\SubEbayUpload($data,$headers,$url));
         }
 

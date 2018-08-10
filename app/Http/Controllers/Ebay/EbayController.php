@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Ebay;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Validator;
 
 class EbayController extends Controller
 
@@ -94,23 +95,7 @@ $headers = array
 	    	dd($data);
 
     }
-    public function getCSV(){
-    	return view('ebay.getcsv');
-    }
-    public function postCSV(Request $request){
-    	$input = $request->all();
-    	if($request->hasFile('file')){
-    		dd($input);
-    	}
-    	dd('asdsd');
-    	$array = ['title','description'];
-    	$contents =['Parts Unlimited R09-774X Ring Set 64.50mm','Description'];
 
-		$file = fopen("products.csv","w");
-		fputcsv($file,$array);
-		fclose($file);
-    	dd($input);
-    }
     public function getItem($itemId){
     	$res = file_get_contents("http://open.api.ebay.com/shopping?callname=GetSingleItem&responseencoding=XML&appid=" . APP_ID . "&siteid=0&version=847&ItemID=${itemId}&IncludeSelector=Details,Compatibility,ItemSpecifics,Description");
         $xml = simplexml_load_string($res);

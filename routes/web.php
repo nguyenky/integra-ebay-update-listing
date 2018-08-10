@@ -17,8 +17,13 @@ Route::get('/', function () {
 Route::group(['namespace'=>'Ebay'],function(){
 
 	Route::get('upload','EbayController@uploadCSV');
-	Route::get('get-csv','EbayController@getCSV');
-	Route::post('get-csv','EbayController@postCSV')->name('upload-csv');
+	
+});
+
+Route::group(['namespace'=>'Csv'],function(){
+
+	Route::get('get-csv','CsvController@getCSV');
+	Route::post('get-csv','CsvController@postCSV')->name('upload-csv');
 	
 });
 

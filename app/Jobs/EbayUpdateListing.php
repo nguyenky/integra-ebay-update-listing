@@ -86,7 +86,7 @@ class EbayUpdateListing implements ShouldQueue
             $ch = curl_init('http://integra2.eocenterprise.com/api/ebay/raw_preview_v2');
             curl_setopt($ch, CURLOPT_POSTFIELDS, [
                 'title' => $title, //done
-                'desc' => $oldDescription, //done
+                'desc' => $v_csv['description'], //done
                 'brand' => trim($brand), //done
                 'condition' => $condition, //done
                 'partNumbers' => implode("\n", $partNumbers), //done

@@ -44,15 +44,7 @@ class CsvController extends Controller
             }else{
                 return redirect()->back()->withErrors($validator)->withInput();
             }
-           
-    
-    	
-  //   	$array = ['title','description'];
-  //   	$contents =['Parts Unlimited R09-774X Ring Set 64.50mm','Description'];
-
-		// $file = fopen("products.csv","w");
-		// fputcsv($file,$array);
-		// fclose($file);
-  //   	dd($input);
+            
+            return redirect('/home');
     }
 }

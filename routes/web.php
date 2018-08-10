@@ -14,19 +14,10 @@
 Route::get('/', function () {
     return view('welcome');
 });
-Route::group(['namespace'=>'Ebay'],function(){
 
-	// Route::get('upload','EbayController@uploadCSV');
-	// Route::get('get-csv','EbayController@getCSV');
-
-	// Route::post('get-csv','EbayController@postCSV')->name('upload-csv');
-	// Route::get('test-job',function(){
-	// 	dispatch(new \App\Jobs\EbayUpdateListing);
-	// });
-
-	
-});
-
+Route::get('test-job',function(){
+		dispatch(new \App\Jobs\EbayUpdateListing);
+	});
 Route::group(['namespace'=>'Csv'],function(){
 
 	Route::get('home','CsvController@getCSV');

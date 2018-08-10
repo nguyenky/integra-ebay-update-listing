@@ -17,7 +17,7 @@ class CsvController extends Controller
     		$file = $request->file;
 
             $rules= [
-             'file' => 'required|mimes:csv'
+             'file' => 'required|mimes:csv,txt'
             ];
 
             $validator=Validator::make($input,$rules);
